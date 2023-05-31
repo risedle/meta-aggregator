@@ -49,4 +49,15 @@ contract AggregatorManagerTest is Test {
 
     assertTrue(manager.aggregators(aggregator));
   }
+
+  /// @notice Make sure it revert when we try to unregister non-existent aggregator
+  function testUnregisterNonExistentAggregator() public {
+    address aggregator = address(6);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        AggregatorManager.AggregatorInvalid.selector, aggregator
+      )
+    );
+    manager.unregister(aggregator);
+  }
 }
