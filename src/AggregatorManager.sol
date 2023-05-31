@@ -10,7 +10,7 @@ contract AggregatorManager is Ownable {
   /// @dev Event emitted if existing dex aggregator is unregistered
   event AggregatorUnregistered(address indexed aggregator);
 
-  /// @dev Error is raised if aggregator is not whitelisted
+  /// @dev Error is raised if specified aggregator is not valid
   error AggregatorInvalid(address aggregator);
 
   /// @dev Whitelisted aggregators
