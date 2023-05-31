@@ -1,14 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity ^0.8.0;
 
-contract Counter {
-  uint256 public number;
-
-  function setNumber(uint256 newNumber) public {
-    number = newNumber;
-  }
-
-  function increment() public {
-    number++;
-  }
-}
+import { Ownable } from "openzeppelin/access/Ownable.sol";
