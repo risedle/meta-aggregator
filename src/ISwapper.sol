@@ -11,6 +11,9 @@ interface ISwapper {
   /// @notice Error raised if amount out is invalid
   error AmountOutInvalid();
 
+  /// @notice Error raised if amount in is invalid
+  error AmountInInvalid();
+
   /// @notice Event emitted if swap happen
   event Swap(
     address indexed user,
