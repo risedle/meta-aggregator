@@ -78,7 +78,6 @@ contract TokenToETHSwapper is ISwapper, AggregatorManager, FeeCollector {
     uint256 tokenOutMinAmount
   ) internal {
     // Swap
-    if (address(this).balance < msg.value) revert AmountOutInvalid();
     uint256 balanceBeforeSwap = address(this).balance - msg.value;
     IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), tokenInAmount);
     IERC20(tokenIn).safeApprove(aggregator, tokenInAmount);

@@ -72,14 +72,12 @@ contract TokenToTokenSwapper is ISwapper, AggregatorManager, FeeCollector {
    * Here is step by step:
    * 0. Make sure user have approved this contract to spend their token
    * 1. Transfer the tokenIn to the contract
-   * 2. Approve aggregator to spend the token
-   * 3. Call the aggregator contract with specified call data
-   * 4. Perform double check such as allowance and eth
-   * 5. Send ETH to the user
+   * 2. Approve aggregator to spend the tokenIn
+   * 3. Call the aggregator contract with specified call data. Call data should
+   *    take account that only tokenInAmount - fee is approved to swap.
+   * 4. Perform double check such as allowance
+   * 5. Send tokenOut to the user
    *
-   * NOTE:
-   * - The fee should be calculate off-chain too.
-   * - swapped tokenIn = tokenInAmount - (tokenInAmount * 0.1%)
    */
   function _swapTokenToToken(
     address tokenIn,
