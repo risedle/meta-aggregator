@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { IERC20 } from "openzeppelin/token/ERC20/IERC20.sol";
+import { IERC20Permit } from
+  "openzeppelin/token/ERC20/extensions/IERC20Permit.sol";
 import { SafeERC20 } from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "openzeppelin/utils/math/Math.sol";
 
@@ -26,6 +28,7 @@ contract TokenToETHSwapper is AggregatorManager {
    * @param aggregator The contract address of aggregator
    * @param data The aggregator's call data
    * @param tokenInAmount The amount of input token
+   * @param tokenOutMinAmount The min amount of output token
    * @param fee Fee in ether (e.g. 0.1% is 0.001 ether or 1000000000000000)
    */
   function swapTokenToETH(
@@ -33,9 +36,41 @@ contract TokenToETHSwapper is AggregatorManager {
     address payable aggregator,
     bytes memory data,
     uint256 tokenInAmount,
+    uint256 tokenOutMinAmount,
     uint256 fee
   ) external payable onlyRegisteredAggregator(aggregator) {
-    _swapTokenToETH(tokenIn, aggregator, data, tokenInAmount, fee);
+    _swapTokenToETH(
+      tokenIn, aggregator, data, tokenInAmount, tokenOutMinAmount, fee
+    );
+  }
+
+  /**
+   * @notice Swap token to ETH with permit
+   * @param tokenIn The input token address
+   * @param aggregator The contract address of aggregator
+   * @param data The aggregator's call data
+   * @param tokenInAmount The amount of input token
+   * @param tokenOutMinAmount The min amount of output token
+   * @param fee Fee in ether (e.g. 0.1% is 0.001 ether or 1000000000000000)
+   */
+  function swapTokenToETHWithPermit(
+    address tokenIn,
+    address payable aggregator,
+    bytes memory data,
+    uint256 tokenInAmount,
+    uint256 tokenOutMinAmount,
+    uint256 fee,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external payable onlyRegisteredAggregator(aggregator) {
+    IERC20Permit(tokenIn).permit(
+      msg.sender, address(this), tokenInAmount, deadline, v, r, s
+    );
+    _swapTokenToETH(
+      tokenIn, aggregator, data, tokenInAmount, tokenOutMinAmount, fee
+    );
   }
 
   /**
@@ -55,6 +90,7 @@ contract TokenToETHSwapper is AggregatorManager {
     address payable aggregator,
     bytes memory data,
     uint256 tokenInAmount,
+    uint256 tokenOutMinAmount,
     uint256 fee
   ) internal {
     // Swap
@@ -69,8 +105,11 @@ contract TokenToETHSwapper is AggregatorManager {
     uint256 allowance = IERC20(tokenIn).allowance(address(this), aggregator);
     if (allowance > 0) revert AllowanceInvalid(aggregator);
     uint256 balanceAfterSwap = address(this).balance;
+    if (balanceAfterSwap < balanceBeforeSwap) revert ETHAmountInvalid();
     uint256 amountOut = balanceAfterSwap - balanceBeforeSwap;
-    if (amountOut == 0) revert ETHAmountInvalid();
+    if (amountOut == 0 || amountOut < tokenOutMinAmount) {
+      revert ETHAmountInvalid();
+    }
 
     // Send ETH to the user
     if (fee > 0) {
