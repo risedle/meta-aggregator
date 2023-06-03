@@ -14,7 +14,7 @@ contract AggregatorManager is Ownable {
   error AggregatorInvalid(address aggregator);
 
   /// @dev Whitelisted aggregators
-  mapping(address aggregator => bool isWhitelisted) public aggregators;
+  mapping(address aggregator => bool isRegistered) public aggregators;
 
   /**
    * @notice Register new dex aggregator
@@ -26,7 +26,7 @@ contract AggregatorManager is Ownable {
   }
 
   /// @dev Modifier to make sure only whitelisted aggregator is called
-  modifier onlyWhitelistedAggregator(address aggregator) {
+  modifier onlyRegisteredAggregator(address aggregator) {
     if (!aggregators[aggregator]) revert AggregatorInvalid(aggregator);
     _;
   }
@@ -38,7 +38,7 @@ contract AggregatorManager is Ownable {
   function unregister(address aggregator)
     public
     onlyOwner
-    onlyWhitelistedAggregator(aggregator)
+    onlyRegisteredAggregator(aggregator)
   {
     aggregators[aggregator] = false;
     emit AggregatorUnregistered(aggregator);
