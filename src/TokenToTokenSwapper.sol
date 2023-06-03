@@ -11,38 +11,44 @@ import { ISwapper } from "./ISwapper.sol";
 import { AggregatorManager } from "./AggregatorManager.sol";
 import { FeeCollector } from "./FeeCollector.sol";
 
-contract TokenToETHSwapper is ISwapper, AggregatorManager, FeeCollector {
+contract TokenToTokenSwapper is ISwapper, AggregatorManager, FeeCollector {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
   /**
-   * @notice Swap token to ETH
+   * @notice Swap token to token
    * @param tokenIn The input token address
+   * @param tokenOut The output token address
    * @param aggregator The contract address of aggregator
    * @param data The aggregator's call data
    * @param tokenInAmount The amount of input token
    * @param tokenOutMinAmount The min amount of output token
    */
-  function swapTokenToETH(
+  function swapTokenToToken(
     address tokenIn,
+    address tokenOut,
     address payable aggregator,
     bytes memory data,
     uint256 tokenInAmount,
     uint256 tokenOutMinAmount
   ) external payable onlyRegisteredAggregator(aggregator) {
-    _swapTokenToETH(tokenIn, aggregator, data, tokenInAmount, tokenOutMinAmount);
+    _swapTokenToToken(
+      tokenIn, tokenOut, aggregator, data, tokenInAmount, tokenOutMinAmount
+    );
   }
 
   /**
    * @notice Swap token to ETH with permit
    * @param tokenIn The input token address
+   * @param tokenOut The output token address
    * @param aggregator The contract address of aggregator
    * @param data The aggregator's call data
    * @param tokenInAmount The amount of input token
    * @param tokenOutMinAmount The min amount of output token
    */
-  function swapTokenToETHWithPermit(
+  function swapTokenToTokenWithPermit(
     address tokenIn,
+    address tokenOut,
     address payable aggregator,
     bytes memory data,
     uint256 tokenInAmount,
@@ -55,11 +61,13 @@ contract TokenToETHSwapper is ISwapper, AggregatorManager, FeeCollector {
     IERC20Permit(tokenIn).permit(
       msg.sender, address(this), tokenInAmount, deadline, v, r, s
     );
-    _swapTokenToETH(tokenIn, aggregator, data, tokenInAmount, tokenOutMinAmount);
+    _swapTokenToToken(
+      tokenIn, tokenOut, aggregator, data, tokenInAmount, tokenOutMinAmount
+    );
   }
 
   /**
-   * @dev Implementation of SwapTokenToETH via specified aggregator.
+   * @dev Implementation of swapTokenToToken via specified aggregator.
    *
    * Here is step by step:
    * 0. Make sure user have approved this contract to spend their token
@@ -67,40 +75,41 @@ contract TokenToETHSwapper is ISwapper, AggregatorManager, FeeCollector {
    * 2. Approve aggregator to spend the token
    * 3. Call the aggregator contract with specified call data
    * 4. Perform double check such as allowance and eth
-   * 5. Deduct fee (if any)
-   * 6. Send ETH to the user
+   * 5. Send ETH to the user
+   *
+   * NOTE:
+   * - The fee should be calculate off-chain too.
+   * - swapped tokenIn = tokenInAmount - (tokenInAmount * 0.1%)
    */
-  function _swapTokenToETH(
+  function _swapTokenToToken(
     address tokenIn,
+    address tokenOut,
     address payable aggregator,
     bytes memory data,
     uint256 tokenInAmount,
     uint256 tokenOutMinAmount
   ) internal {
-    // Swap
-    if (address(this).balance < msg.value) revert AmountOutInvalid();
-    uint256 balanceBeforeSwap = address(this).balance - msg.value;
+    uint256 balanceBeforeSwap = IERC20(tokenOut).balanceOf(address(this));
+    uint256 feeAmount = FEE.mulDiv(tokenInAmount, 1e18, Math.Rounding.Down);
     IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), tokenInAmount);
-    IERC20(tokenIn).safeApprove(aggregator, tokenInAmount);
+    IERC20(tokenIn).safeApprove(aggregator, tokenInAmount - feeAmount);
     (bool success,) = aggregator.call{ value: msg.value }(data);
     if (!success) revert SwapViaAggregatorFailed(aggregator);
 
     // Double check
     uint256 allowance = IERC20(tokenIn).allowance(address(this), aggregator);
     if (allowance > 0) revert AllowanceInvalid(aggregator);
-    uint256 balanceAfterSwap = address(this).balance;
+    uint256 balanceAfterSwap = IERC20(tokenOut).balanceOf(address(this));
     if (balanceAfterSwap < balanceBeforeSwap) revert AmountOutInvalid();
     uint256 amountOut = balanceAfterSwap - balanceBeforeSwap;
     if (amountOut == 0 || amountOut < tokenOutMinAmount) {
       revert AmountOutInvalid();
     }
 
-    // Send ETH to the user
-    uint256 amountFee = FEE.mulDiv(amountOut, 1e18, Math.Rounding.Down);
-    (success,) = address(msg.sender).call{ value: amountOut - amountFee }("");
-    if (!success) revert SwapViaAggregatorFailed(aggregator);
+    // Send Token to the user
+    IERC20(tokenOut).safeTransfer(msg.sender, amountOut);
 
-    emit Swap(msg.sender, tokenIn, address(0), tokenInAmount, amountOut);
+    emit Swap(msg.sender, tokenIn, tokenOut, tokenInAmount, amountOut);
   }
 
   receive() external payable { }

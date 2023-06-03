@@ -2,12 +2,21 @@
 pragma solidity ^0.8.0;
 
 interface ISwapper {
-  /// @notice Error is raised if contract all to aggregator is failed
+  /// @notice Error raised if contract all to aggregator is failed
   error SwapViaAggregatorFailed(address aggregator);
 
-  /// @notice Error is raised if allowance is not spend 100%
+  /// @notice Error raised if allowance is not spend 100%
   error AllowanceInvalid(address aggregator);
 
-  /// @notice Error is raised if ETH is not received by contract
-  error ETHAmountInvalid();
+  /// @notice Error raised if amount out is invalid
+  error AmountOutInvalid();
+
+  /// @notice Event emitted if swap happen
+  event Swap(
+    address indexed user,
+    address indexed tokenIn,
+    address indexed tokenOut,
+    uint256 tokenInAmount,
+    uint256 tokenOutAmount
+  );
 }
