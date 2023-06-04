@@ -10,8 +10,14 @@ import { Math } from "openzeppelin/utils/math/Math.sol";
 import { ISwapper } from "./ISwapper.sol";
 import { AggregatorManager } from "./AggregatorManager.sol";
 import { FeeCollector } from "./FeeCollector.sol";
+import { ETHReceiver } from "./ETHReceiver.sol";
 
-contract ETHToTokenSwapper is ISwapper, AggregatorManager, FeeCollector {
+contract ETHToTokenSwapper is
+  ISwapper,
+  AggregatorManager,
+  FeeCollector,
+  ETHReceiver
+{
   using SafeERC20 for IERC20;
   using Math for uint256;
 
@@ -80,6 +86,4 @@ contract ETHToTokenSwapper is ISwapper, AggregatorManager, FeeCollector {
 
     emit Swap(msg.sender, address(0), tokenOut, msg.value, amountOut);
   }
-
-  receive() external payable { }
 }
