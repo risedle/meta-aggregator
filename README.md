@@ -21,12 +21,6 @@ Key features:
    wider range of liquidity pools than a single DEX. This means that you
    can often find liquidity for less popular tokens.
 
-## Deployments
-
-| Chain    | Address                                      | Explorer                                                                       |
-| -------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| Arbitrum | `0x1843b412cfffcae9593232135e7564959509867a` | [link](https://arbiscan.io/address/0x1843b412cfffcae9593232135e7564959509867a) |
-
 ## Installation
 
 To install with Foundry:
@@ -63,3 +57,27 @@ To run the test, use the following command:
 ```
 forge test
 ```
+
+## Deployments
+
+Create `.env` with the following contents:
+
+```
+ARBITRUM_RPC_URL=https://rpc.ankr.com/arbitrum
+PRIVATE_KEY=
+ETHERSCAN_API_KEY=
+```
+
+Then run the following command:
+
+```
+# To load the variables in the .env file
+source .env
+
+# To deploy and verify our contract
+forge script script/DeployMetaAggregator.s.sol:DeployMetaAggregator --rpc-url $ARBITRUM_RPC_URL --broadcast --verify -vvvv
+```
+
+| Chain    | Address                                      | Explorer                                                                       |
+| -------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
+| Arbitrum | `0x1843b412cfffcae9593232135e7564959509867a` | [link](https://arbiscan.io/address/0x1843b412cfffcae9593232135e7564959509867a) |
