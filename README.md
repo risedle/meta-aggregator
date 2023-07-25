@@ -80,4 +80,4 @@ forge script script/DeployMetaAggregator.s.sol:DeployMetaAggregator --rpc-url $A
 
 | Chain    | Address                                      | Explorer                                                                       |
 | -------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| Arbitrum | `0x1843b412cfffcae9593232135e7564959509867a` | [link](https://arbiscan.io/address/0x1843b412cfffcae9593232135e7564959509867a) |
+| Arbitrum | `0x4741f03155ca96a4884cbe2ec34193196e25afc8` | [link](https://arbiscan.io/address/0x4741f03155ca96a4884cbe2ec34193196e25afc8) |
